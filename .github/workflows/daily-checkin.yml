@@ -35,4 +35,5 @@ jobs:
         env:
           ACCOUNTS_CONFIG: ${{ secrets.ACCOUNTS_CONFIG }}
         run: |
+          cd bing-auto-rewards
           python main.py
