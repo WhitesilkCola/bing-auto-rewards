@@ -25,6 +25,14 @@ jobs:
           chrome-version: "138"
           install-chromedriver: true
 
+      # 关键：强制使用我们安装的 Chrome 138
+      - name: Override PATH to use Chrome 138
+        run: echo "$HOME/.local/share/chromium/138" >> $GITHUB_PATH
+
+      # 验证一下版本
+      - name: Check Chrome version
+        run: google-chrome --version
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -34,4 +42,4 @@ jobs:
         env:
           ACCOUNTS_CONFIG: ${{ secrets.ACCOUNTS_CONFIG }}
         run: |
-          python bingZDH.py  # 这里改成正确的文件名
+          python bingZDH.py
