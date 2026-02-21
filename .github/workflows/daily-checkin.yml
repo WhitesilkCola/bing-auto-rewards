@@ -34,4 +34,4 @@ jobs:
         env:
           ACCOUNTS_CONFIG: ${{ secrets.ACCOUNTS_CONFIG }}
         run: |
-          python main.py
+          python bingZDH.py  # 这里改成正确的文件名
