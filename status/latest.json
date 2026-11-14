@@ -1,20 +1,18 @@
 {
   "date": "2026-11-14",
-  "updated_at": "2026-11-14T04:31:15Z",
+  "updated_at": "2026-11-14T04:34:45Z",
   "status": "failed",
-  "accounts_attempted": 2,
+  "accounts_attempted": 1,
   "accounts_completed": 0,
   "accounts": [],
   "total_points": null,
   "today_points": null,
-  "error_count": 5,
+  "error_count": 3,
   "errors": [
-    "账号组 group1 账号ku***@outlook.com 自动化流程异常: HTTPConnectionPool(host='localhost', port=52391): Max retries exceeded with url: /session/50a6d6d43929a3a0fda9ae99218fd593/url (Caused by NewConnectionError(\"HTTPConnection(host='localhost', port=52391): Failed to establish a new connection: [Errno 111] Conn",
-    "详细错误信息: Traceback (most recent call last):",
-    "所有方式都未能点击登录按钮",
-    "账号组 group2 账号an***@example.com 自动化流程异常: 未找到登录按钮",
+    "未找到密码输入框",
+    "账号组 group1 账号ku***@outlook.com 自动化流程异常: 未找到密码输入框",
     "详细错误信息: Traceback (most recent call last):"
   ],
-  "run_id": "43557000887",
-  "run_url": "https://github.com/WhitesilkCola/bing-auto-rewards/actions/runs/43557000887"
+  "run_id": "43557140255",
+  "run_url": "https://github.com/WhitesilkCola/bing-auto-rewards/actions/runs/43557140255"
 }
