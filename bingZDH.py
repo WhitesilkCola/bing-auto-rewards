@@ -33,6 +33,40 @@ if os.getenv('GITHUB_ACTIONS'):
     # 设置日志文件路径
     LOG_FILE = "/tmp/bing_automation.log"
 
+# ========== CHROME 版本探测 ==========
+def detect_chrome_major(default=138):
+    """自动探测本机 Chrome 主版本号，避免硬编码版本导致驱动不匹配"""
+    import subprocess
+    import shutil
+    candidates = [
+        shutil.which("google-chrome"),
+        shutil.which("google-chrome-stable"),
+        shutil.which("chromium"),
+        shutil.which("chromium-browser"),
+        shutil.which("chrome"),
+    ]
+    if os.name == "nt":
+        candidates += [
+            r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+            r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+        ]
+    for exe in candidates:
+        if not exe:
+            continue
+        try:
+            out = subprocess.check_output(
+                [exe, "--version"], stderr=subprocess.STDOUT, timeout=20
+            ).decode(errors="ignore")
+            m = re.search(r"(\d+)\.", out)
+            if m:
+                return int(m.group(1))
+        except Exception:
+            continue
+    return default
+
+
+CHROME_MAJOR = int(os.getenv("CHROME_MAJOR") or detect_chrome_major())
+
 # ========== LOGGING ==========
 logging.basicConfig(
     level=logging.INFO,
@@ -770,6 +804,27 @@ def logout_bing(driver):
     except Exception:
         pass
 
+def apply_profile(chrome_options, group_name, attempt=0):
+    """
+    配置浏览器用户数据目录。
+    设置 BING_PROFILE_DIR 时使用固定目录并关闭无痕，使登录 cookie 得以保留；
+    否则沿用原来的临时目录方案（每次全新会话）。
+    """
+    persistent = os.getenv("BING_PROFILE_DIR")
+    if persistent:
+        profile_dir = os.path.join(persistent, str(group_name))
+        os.makedirs(profile_dir, exist_ok=True)
+        chrome_options.arguments = [a for a in chrome_options.arguments if a != '--incognito']
+        chrome_options.add_argument(f'--user-data-dir={profile_dir}')
+        logger.info(f"账号组 {group_name} 使用持久化用户目录: {profile_dir}")
+        return profile_dir
+    import tempfile
+    suffix = f"_retry_{attempt}" if attempt else ""
+    temp_dir = tempfile.mkdtemp(prefix=f"chrome_group_{group_name}{suffix}_")
+    chrome_options.add_argument(f'--user-data-dir={temp_dir}')
+    return temp_dir
+
+
 def create_chrome_options():
     """
     创建Chrome选项
@@ -876,15 +931,12 @@ def process_account_group(group_name, accounts, search_words):
                         chrome_options = create_chrome_options()
                         
                         # 为每个group使用不同的用户数据目录，避免冲突
-                        import tempfile
-                        import os
-                        temp_dir = tempfile.mkdtemp(prefix=f"chrome_group_{group_name}_")
-                        chrome_options.add_argument(f'--user-data-dir={temp_dir}')
+                        apply_profile(chrome_options, group_name)
                         chrome_options.add_argument(f'--remote-debugging-port={9222 + hash(group_name) % 1000}')
                         
                         driver_result['driver'] = uc.Chrome(
                             options=chrome_options,
-                            version_main=144
+                            version_main=CHROME_MAJOR
                         )
                         logger.info(f"账号组 {group_name} Chrome浏览器启动成功！")
                     except Exception as e:
@@ -947,12 +999,10 @@ def process_account_group(group_name, accounts, search_words):
                             # 创建新的Chrome选项对象
                             new_chrome_options = create_chrome_options()
                             # 为重新创建的driver也使用独立的用户数据目录
-                            import tempfile
-                            temp_dir = tempfile.mkdtemp(prefix=f"chrome_group_{group_name}_retry_{attempt}_")
-                            new_chrome_options.add_argument(f'--user-data-dir={temp_dir}')
+                            apply_profile(new_chrome_options, group_name, attempt)
                             new_chrome_options.add_argument(f'--remote-debugging-port={9222 + hash(group_name) % 1000 + attempt}')
                             
-                            driver = uc.Chrome(options=new_chrome_options, version_main=138)
+                            driver = uc.Chrome(options=new_chrome_options, version_main=CHROME_MAJOR)
                             logger.info(f"账号组 {group_name} Chrome浏览器重新启动成功！")
                             break
                         except Exception as e:
@@ -997,12 +1047,10 @@ def process_account_group(group_name, accounts, search_words):
                             # 创建新的Chrome选项对象
                             new_chrome_options = create_chrome_options()
                             # 为重新创建的driver也使用独立的用户数据目录
-                            import tempfile
-                            temp_dir = tempfile.mkdtemp(prefix=f"chrome_group_{group_name}_retry_{attempt}_")
-                            new_chrome_options.add_argument(f'--user-data-dir={temp_dir}')
+                            apply_profile(new_chrome_options, group_name, attempt)
                             new_chrome_options.add_argument(f'--remote-debugging-port={9222 + hash(group_name) % 1000 + attempt}')
                             
-                            driver = uc.Chrome(options=new_chrome_options, version_main=138)
+                            driver = uc.Chrome(options=new_chrome_options, version_main=CHROME_MAJOR)
                             logger.info(f"账号组 {group_name} Chrome浏览器重新启动成功！")
                             break
                         except Exception as e2:
@@ -1033,8 +1081,13 @@ def process_account_group(group_name, accounts, search_words):
 def main():
     logger.info("=== 程序开始执行 ===")
     logger.info("正在读取账号配置文件...")
-    with open('accounts.json', 'r', encoding='utf-8') as f:
-        account_groups = json.load(f)
+    config_env = os.getenv("ACCOUNTS_CONFIG")
+    if config_env and config_env.strip():
+        account_groups = json.loads(config_env)
+        logger.info("已从 ACCOUNTS_CONFIG 环境变量读取账号配置")
+    else:
+        with open('accounts.json', 'r', encoding='utf-8') as f:
+            account_groups = json.load(f)
     
     total_accounts = sum(len(accounts) for accounts in account_groups.values())
     logger.info(f"成功读取到 {len(account_groups)} 个账号组，共 {total_accounts} 个账号")
