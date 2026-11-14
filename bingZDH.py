@@ -96,11 +96,57 @@ def dump_state(driver, tag=""):
     logger.error(f"[页面状态 {tag}] url={url} | title={title} | text={body[:400]}")
 
 
+def _js_click(driver, el):
+    """优先用 JS 点击，绕过元素被遮挡或需要 hover 的情况"""
+    try:
+        driver.execute_script("arguments[0].scrollIntoView({block:'center'});", el)
+        time.sleep(0.3)
+        driver.execute_script("arguments[0].click();", el)
+        return True
+    except Exception:
+        try:
+            el.click()
+            return True
+        except Exception:
+            return False
+
+
+def _try_click_text(driver, texts, tag=""):
+    """按文本片段依次尝试点击，兼容文本嵌在 span 内的情况"""
+    for t in texts:
+        xpaths = [
+            f"//a[contains(normalize-space(.), '{t}')]",
+            f"//button[contains(normalize-space(.), '{t}')]",
+            f"//*[@role='button' and contains(normalize-space(.), '{t}')]",
+            f"//*[normalize-space(text())='{t}']",
+            f"//*[contains(normalize-space(.), '{t}')]",
+        ]
+        for xp in xpaths:
+            try:
+                els = driver.find_elements(By.XPATH, xp)
+            except Exception:
+                els = []
+            for el in els[:3]:
+                try:
+                    if not el.is_displayed():
+                        continue
+                    if _js_click(driver, el):
+                        logger.info(f"{tag} 点击成功: {xp}")
+                        time.sleep(2)
+                        return True
+                except Exception:
+                    continue
+    return False
+
+
 def switch_to_password_login(driver):
     """
-    处理微软的无密码优先页面（向设备发送登录请求 / 使用通行密钥等），
-    依次点击「其他登录方式」→「使用我的密码」，切回密码登录。
+    处理微软的无密码优先页面（向设备发送登录请求 / 通行密钥等），
+    点击「其他登录方式」→「使用我的密码」，切回密码登录。
     """
+    other_ways = ["Other ways to sign in", "其他登录方式", "其他方式登录", "使用其他方式", "Other ways"]
+    pwd_options = ["Use my password", "Use your password", "使用我的密码", "使用密码", "Sign in with a password"]
+
     for _round in range(15):
         try:
             body = driver.find_element(By.TAG_NAME, "body").text
@@ -113,40 +159,14 @@ def switch_to_password_login(driver):
             logger.info(f"[登录页检测] {body[:160]}".replace("\n", " | "))
 
         low = body.lower()
-        if ("sign-in request" in low or "登录请求" in body or "verify your identity" in low
-                or "保护你的帐户" in body or "help us protect" in low):
-            for xp in [
-                "//button[contains(text(),'Other ways to sign in')]",
-                "//a[contains(text(),'Other ways to sign in')]",
-                "//*[contains(text(),'其他登录方式')]",
-                "//*[contains(text(),'其他方式登录')]",
-                "//*[contains(text(),'使用其他方式')]",
-            ]:
-                try:
-                    driver.find_element(By.XPATH, xp).click()
-                    logger.info("已点击「其他登录方式」")
-                    time.sleep(2)
-                    break
-                except Exception:
-                    continue
+        if ("sign-in request" in low or "登录请求" in body or "其他登录方式" in body
+                or "other ways" in low or "verify your identity" in low):
+            _try_click_text(driver, other_ways, "[其他登录方式]")
 
-        for xp in [
-            "//*[contains(text(),'Use my password')]",
-            "//*[contains(text(),'Use your password')]",
-            "//*[contains(text(),'使用我的密码')]",
-            "//*[contains(text(),'使用密码')]",
-            "//button[normalize-space(text())='密码']",
-            "//a[normalize-space(text())='密码']",
-        ]:
-            try:
-                driver.find_element(By.XPATH, xp).click()
-                logger.info(f"已点击密码登录方式: {xp}")
-                time.sleep(2)
-                return True
-            except Exception:
-                continue
+        _try_click_text(driver, pwd_options, "[密码登录]")
 
         if driver.find_elements(By.NAME, "passwd") or driver.find_elements(By.CSS_SELECTOR, "input[type='password']"):
+            logger.info("已切回密码登录")
             return True
         time.sleep(2)
     return False
