@@ -867,7 +867,6 @@ def create_chrome_options():
         chrome_options.add_argument('--disable-client-side-phishing-detection')
         chrome_options.add_argument('--disable-component-update')
         chrome_options.add_argument('--disable-domain-reliability')
-        chrome_options.add_argument('--disable-features=VizDisplayCompositor')
         chrome_options.add_argument('--disable-hang-monitor')
         chrome_options.add_argument('--disable-prompt-on-repost')
         chrome_options.add_argument('--disable-renderer-backgrounding')
@@ -878,8 +877,6 @@ def create_chrome_options():
         chrome_options.add_argument('--disable-web-security')
         chrome_options.add_argument('--no-first-run')
         chrome_options.add_argument('--no-default-browser-check')
-        chrome_options.add_argument('--no-zygote')
-        chrome_options.add_argument('--single-process')
         chrome_options.add_argument('--disable-background-networking')
         chrome_options.add_argument('--disable-background-timer-throttling')
         chrome_options.add_argument('--disable-backgrounding-occluded-windows')
@@ -1089,6 +1086,20 @@ def main():
         with open('accounts.json', 'r', encoding='utf-8') as f:
             account_groups = json.load(f)
     
+    # 过滤示例占位账号，避免把 README 里的示例配置当成真实账号去登录
+    filtered_groups = {}
+    for gname, accts in account_groups.items():
+        keep = [a for a in accts if not str(a.get("email", "")).lower().endswith("@example.com")]
+        skipped = len(accts) - len(keep)
+        if skipped:
+            logger.warning(f"账号组 {gname} 中 {skipped} 个示例占位账号(@example.com)，已跳过")
+        if keep:
+            filtered_groups[gname] = keep
+    if not filtered_groups:
+        logger.error("没有可用的真实账号配置，请检查 ACCOUNTS_CONFIG 是否仍为示例内容")
+        raise SystemExit(1)
+    account_groups = filtered_groups
+
     total_accounts = sum(len(accounts) for accounts in account_groups.values())
     logger.info(f"成功读取到 {len(account_groups)} 个账号组，共 {total_accounts} 个账号")
     
