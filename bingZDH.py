@@ -101,14 +101,16 @@ def switch_to_password_login(driver):
     处理微软的无密码优先页面（向设备发送登录请求 / 使用通行密钥等），
     依次点击「其他登录方式」→「使用我的密码」，切回密码登录。
     """
-    for _round in range(4):
+    for _round in range(15):
         try:
             body = driver.find_element(By.TAG_NAME, "body").text
         except Exception:
             body = ""
         if not body:
-            time.sleep(1)
+            time.sleep(2)
             continue
+        if _round == 0:
+            logger.info(f"[登录页检测] {body[:160]}".replace("\n", " | "))
 
         low = body.lower()
         if ("sign-in request" in low or "登录请求" in body or "verify your identity" in low
@@ -146,7 +148,7 @@ def switch_to_password_login(driver):
 
         if driver.find_elements(By.NAME, "passwd") or driver.find_elements(By.CSS_SELECTOR, "input[type='password']"):
             return True
-        time.sleep(1)
+        time.sleep(2)
     return False
 
 
