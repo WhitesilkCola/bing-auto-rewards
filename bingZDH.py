@@ -820,6 +820,8 @@ def get_bing_points(driver):
             today_points = span.get("aria-label").strip()
             break
     logger.info(f"当前Bing总积分：{total_points}，今日积分：{today_points}")
+    if total_points == '未找到总积分':
+        dump_state(driver, "积分缺失")
     return total_points, today_points
 
 def get_pc_search_progress(driver):
