@@ -79,6 +79,23 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # ========== 工具函数 ==========
+def dump_state(driver, tag=""):
+    """失败时输出页面关键信息，用于判断是风控页、验证码页还是选择器失效"""
+    try:
+        url = driver.current_url
+    except Exception:
+        url = "unknown"
+    try:
+        title = driver.title
+    except Exception:
+        title = "unknown"
+    try:
+        body = driver.find_element(By.TAG_NAME, "body").text.strip().replace("\n", " | ")
+    except Exception:
+        body = "(无法读取页面文本)"
+    logger.error(f"[页面状态 {tag}] url={url} | title={title} | text={body[:400]}")
+
+
 def check_driver_connection(driver, group_name):
     """检查WebDriver连接是否正常"""
     try:
@@ -470,21 +487,28 @@ def login_bing(driver, email, password, idx, group_name=None):
     try:
         # 增强密码输入框查找逻辑，循环多种方式，延长等待时间
         password_input = None
+        password_selectors = [
+            (By.NAME, "passwd"),
+            (By.ID, "passwordEntry"),
+            (By.CSS_SELECTOR, "input[type='password']"),
+            (By.ID, "i0118"),
+            (By.NAME, "Password"),
+        ]
         for _ in range(WAIT_TIMEOUT * 2):  # 最多等30秒
-            try:
-                password_input = driver.find_element(By.NAME, "passwd")
-                if password_input.is_displayed():
-                    break
-            except Exception:
-                pass
-            try:
-                password_input = driver.find_element(By.ID, "passwordEntry")
-                if password_input.is_displayed():
-                    break
-            except Exception:
-                pass
+            for _by, _sel in password_selectors:
+                try:
+                    _el = driver.find_element(_by, _sel)
+                    if _el.is_displayed():
+                        password_input = _el
+                        logger.info(f"找到密码输入框: {_by} = {_sel}")
+                        break
+                except Exception:
+                    continue
+            if password_input:
+                break
             time.sleep(1)
         if not password_input or not password_input.is_displayed():
+            dump_state(driver, "密码框缺失")
             raise Exception("未找到密码输入框")
     except Exception as e:
         logger.error("未找到密码输入框")
