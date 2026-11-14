@@ -1,31 +1,85 @@
-name: Bing Automation
+name: Bing Auto Rewards
 
 on:
   workflow_dispatch:
   schedule:
+    # UTC 02:00 = 北京时间 10:00
     - cron: "0 2 * * *"
 
+concurrency:
+  group: bing-rewards
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
 jobs:
-  build:
+  checkin:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 45
 
     steps:
-      - name: Checkout code
+      - name: 检出代码
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: 安装 Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Install dependencies
+      - name: 安装依赖
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          pip install setuptools
 
-      - name: Run script
+      - name: 查看 runner 上的 Chrome 版本
+        run: |
+          (google-chrome --version || google-chrome-stable --version || chromium --version) 2>&1 | tee chrome-version.txt
+
+      - name: 执行签到任务
+        id: checkin
+        continue-on-error: true
         env:
           ACCOUNTS_CONFIG: ${{ secrets.ACCOUNTS_CONFIG }}
+          CHROME_MAJOR: ${{ vars.CHROME_MAJOR }}
+        run: python bingZDH.py
+
+      - name: 生成结构化结果
+        if: always()
+        run: python summarize.py
+
+      - name: 提交结果供云端读取
+        if: always()
         run: |
-          python bingZDH.py
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [ ! -f status/latest.json ]; then
+            echo "status/latest.json 不存在，跳过提交"
+            exit 0
+          fi
+          git add status/latest.json
+          if git diff --staged --quiet; then
+            echo "status/latest.json 无变化，跳过提交"
+          else
+            git commit -m "chore: 更新签到状态 $(date -u +%Y-%m-%d)"
+            git push
+          fi
+
+      - name: 上传运行日志
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bing-log-${{ github.run_id }}
+          path: |
+            /tmp/bing_automation.log
+            chrome-version.txt
+            status/latest.json
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: 检查签到是否成功
+        if: steps.checkin.outcome == 'failure'
+        run: |
+          echo "签到脚本执行失败，详见上方日志与 artifact" >&2
+          exit 1
