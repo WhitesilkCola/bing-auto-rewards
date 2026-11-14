@@ -96,6 +96,60 @@ def dump_state(driver, tag=""):
     logger.error(f"[页面状态 {tag}] url={url} | title={title} | text={body[:400]}")
 
 
+def switch_to_password_login(driver):
+    """
+    处理微软的无密码优先页面（向设备发送登录请求 / 使用通行密钥等），
+    依次点击「其他登录方式」→「使用我的密码」，切回密码登录。
+    """
+    for _round in range(4):
+        try:
+            body = driver.find_element(By.TAG_NAME, "body").text
+        except Exception:
+            body = ""
+        if not body:
+            time.sleep(1)
+            continue
+
+        low = body.lower()
+        if ("sign-in request" in low or "登录请求" in body or "verify your identity" in low
+                or "保护你的帐户" in body or "help us protect" in low):
+            for xp in [
+                "//button[contains(text(),'Other ways to sign in')]",
+                "//a[contains(text(),'Other ways to sign in')]",
+                "//*[contains(text(),'其他登录方式')]",
+                "//*[contains(text(),'其他方式登录')]",
+                "//*[contains(text(),'使用其他方式')]",
+            ]:
+                try:
+                    driver.find_element(By.XPATH, xp).click()
+                    logger.info("已点击「其他登录方式」")
+                    time.sleep(2)
+                    break
+                except Exception:
+                    continue
+
+        for xp in [
+            "//*[contains(text(),'Use my password')]",
+            "//*[contains(text(),'Use your password')]",
+            "//*[contains(text(),'使用我的密码')]",
+            "//*[contains(text(),'使用密码')]",
+            "//button[normalize-space(text())='密码']",
+            "//a[normalize-space(text())='密码']",
+        ]:
+            try:
+                driver.find_element(By.XPATH, xp).click()
+                logger.info(f"已点击密码登录方式: {xp}")
+                time.sleep(2)
+                return True
+            except Exception:
+                continue
+
+        if driver.find_elements(By.NAME, "passwd") or driver.find_elements(By.CSS_SELECTOR, "input[type='password']"):
+            return True
+        time.sleep(1)
+    return False
+
+
 def check_driver_connection(driver, group_name):
     """检查WebDriver连接是否正常"""
     try:
@@ -484,6 +538,10 @@ def login_bing(driver, email, password, idx, group_name=None):
         )
     except Exception:
         pass
+    try:
+        switch_to_password_login(driver)
+    except Exception as e:
+        logger.warning(f"切换到密码登录方式时出错: {e}")
     try:
         # 增强密码输入框查找逻辑，循环多种方式，延长等待时间
         password_input = None
