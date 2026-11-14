@@ -22,14 +22,16 @@ HEADLESS = True  # True为无头模式
 SLEEP_BETWEEN_SEARCH = (10, 30)  # 搜索间隔秒数范围
 SLEEP_AFTER_4_SEARCH = 960  # 每4次搜索后暂停秒数
 MAX_SKIP = 8  # 跳过"创建通行密钥"页面最大尝试次数
+MAX_SEARCH_WORDS = 40  # 每次运行最多搜索的关键词数
 
 # 检查是否在GitHub Actions环境中
 if os.getenv('GITHUB_ACTIONS'):
     HEADLESS = True  # GitHub Actions中强制使用无头模式
     # 在GitHub Actions中调整配置
     WAIT_TIMEOUT = 20  # 增加等待时间
-    SLEEP_BETWEEN_SEARCH = (5, 15)  # 减少搜索间隔
-    SLEEP_AFTER_4_SEARCH = 300  # 减少暂停时间（5分钟）
+    SLEEP_BETWEEN_SEARCH = (4, 8)  # 减少搜索间隔
+    SLEEP_AFTER_4_SEARCH = 45  # 每4次搜索后的暂停（秒），避免总耗时超过 job 超时
+    MAX_SEARCH_WORDS = 30  # 控制总时长，微软每日搜索积分也有上限
     # 设置日志文件路径
     LOG_FILE = "/tmp/bing_automation.log"
 
@@ -1209,6 +1211,9 @@ def main():
     
     logger.info("正在获取搜索关键词...")
     search_words = get_bing_hotwords()
+    if MAX_SEARCH_WORDS and len(search_words) > MAX_SEARCH_WORDS:
+        logger.info(f"关键词数量 {len(search_words)} 超过上限，截取前 {MAX_SEARCH_WORDS} 个以控制总时长")
+        search_words = search_words[:MAX_SEARCH_WORDS]
     logger.info(f"成功获取到 {len(search_words)} 个搜索关键词")
     
     # 使用多线程并行处理每个账号组
