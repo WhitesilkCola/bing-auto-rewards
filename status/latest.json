@@ -1,19 +1,22 @@
 {
-  "date": "2026-11-14",
-  "updated_at": "2026-11-14T04:45:48Z",
-  "status": "failed",
+  "date": "2026-11-15",
+  "updated_at": "2026-11-15T09:05:10Z",
+  "status": "success",
   "accounts_attempted": 1,
-  "accounts_completed": 0,
-  "accounts": [],
+  "accounts_completed": 1,
+  "accounts": [
+    "ku***@outlook.com"
+  ],
   "total_points": null,
   "today_points": null,
-  "error_count": 4,
+  "error_count": 38,
   "errors": [
-    "[页面状态 密码框缺失] url=https://login.live.com/oauth20_authorize.srf?client_id=077c9b95-2f57-4442-8872-134fcc08fcb3&scope=openid+profile+email+offline_access&redirect_uri=https%3a%2f%2fwww.bing.com%2fidentity%2fidtokenv2&response_type=code&state=CfDJ8Pj64jZaZ_RFrelrus2TRAD13mfudTWq2rcFdxdNvsvD25w8zoJHVL62q",
-    "未找到密码输入框",
-    "账号组 group1 账号ku***@outlook.com 自动化流程异常: 未找到密码输入框",
-    "详细错误信息: Traceback (most recent call last):"
+    "[页面状态 积分缺失] url=https://rewards.bing.com/about | title=About – Microsoft Rewards | text=Dashboard | Earn | Redeem | About | Refer and Earn | Sweepstakes | Sign in | Explore the benefits of your Microsoft Rewards | Sign in | Create account | You will receive emails about Microsoft Rewards, which incl",
+    "获取电脑搜索进度失败：Message:",
+    "[页面状态 积分缺失] url=https://rewards.bing.com/about | title=About – Microsoft Rewards | text=Dashboard | Earn | Redeem | About | Refer and Earn | Sweepstakes | Sign in | Explore the benefits of your Microsoft Rewards | Sign in | Create account | You will receive emails about Microsoft Rewards, which incl",
+    "[页面状态 积分缺失] url=https://rewards.bing.com/about | title=About – Microsoft Rewards | text=Dashboard | Earn | Redeem | About | Refer and Earn | Sweepstakes | Sign in | Explore the benefits of your Microsoft Rewards | Sign in | Create account | You will receive emails about Microsoft Rewards, which incl",
+    "[页面状态 积分缺失] url=https://rewards.bing.com/about | title=About – Microsoft Rewards | text=Dashboard | Earn | Redeem | About | Refer and Earn | Sweepstakes | Sign in | Explore the benefits of your Microsoft Rewards | Sign in | Create account | You will receive emails about Microsoft Rewards, which incl"
   ],
-  "run_id": "43557975775",
-  "run_url": "https://github.com/WhitesilkCola/bing-auto-rewards/actions/runs/43557975775"
+  "run_id": "43696087635",
+  "run_url": "https://github.com/WhitesilkCola/bing-auto-rewards/actions/runs/43696087635"
 }
