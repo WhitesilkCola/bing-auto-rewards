@@ -1,6 +1,6 @@
 {
-  "date": "2026-11-19",
-  "updated_at": "2026-11-19T10:06:46Z",
+  "date": "2026-11-20",
+  "updated_at": "2026-11-20T09:55:47Z",
   "status": "success",
   "accounts_attempted": 1,
   "accounts_completed": 1,
@@ -9,7 +9,7 @@
   ],
   "total_points": null,
   "today_points": null,
-  "error_count": 38,
+  "error_count": 45,
   "errors": [
     "[页面状态 积分缺失] url=https://rewards.bing.com/about | title=About – Microsoft Rewards | text=Dashboard | Earn | Redeem | About | Refer and Earn | Sweepstakes | Sign in | Explore the benefits of your Microsoft Rewards | Sign in | Create account | You will receive emails about Microsoft Rewards, which incl",
     "获取电脑搜索进度失败：Message:",
@@ -17,6 +17,6 @@
     "[页面状态 积分缺失] url=https://rewards.bing.com/about | title=About – Microsoft Rewards | text=Dashboard | Earn | Redeem | About | Refer and Earn | Sweepstakes | Sign in | Explore the benefits of your Microsoft Rewards | Sign in | Create account | You will receive emails about Microsoft Rewards, which incl",
     "[页面状态 积分缺失] url=https://rewards.bing.com/about | title=About – Microsoft Rewards | text=Dashboard | Earn | Redeem | About | Refer and Earn | Sweepstakes | Sign in | Explore the benefits of your Microsoft Rewards | Sign in | Create account | You will receive emails about Microsoft Rewards, which incl"
   ],
-  "run_id": "44499880191",
-  "run_url": "https://github.com/WhitesilkCola/bing-auto-rewards/actions/runs/44499880191"
+  "run_id": "44712098532",
+  "run_url": "https://github.com/WhitesilkCola/bing-auto-rewards/actions/runs/44712098532"
 }
