@@ -1,6 +1,6 @@
 {
-  "date": "2026-11-21",
-  "updated_at": "2026-11-21T09:25:36Z",
+  "date": "2026-11-22",
+  "updated_at": "2026-11-22T09:33:44Z",
   "status": "success",
   "accounts_attempted": 1,
   "accounts_completed": 1,
@@ -17,6 +17,6 @@
     "[页面状态 积分缺失] url=https://rewards.bing.com/about | title=About – Microsoft Rewards | text=Dashboard | Earn | Redeem | About | Refer and Earn | Sweepstakes | Sign in | Explore the benefits of your Microsoft Rewards | Sign in | Create account | You will receive emails about Microsoft Rewards, which incl",
     "[页面状态 积分缺失] url=https://rewards.bing.com/about | title=About – Microsoft Rewards | text=Dashboard | Earn | Redeem | About | Refer and Earn | Sweepstakes | Sign in | Explore the benefits of your Microsoft Rewards | Sign in | Create account | You will receive emails about Microsoft Rewards, which incl"
   ],
-  "run_id": "44888125112",
-  "run_url": "https://github.com/WhitesilkCola/bing-auto-rewards/actions/runs/44888125112"
+  "run_id": "45006759226",
+  "run_url": "https://github.com/WhitesilkCola/bing-auto-rewards/actions/runs/45006759226"
 }
